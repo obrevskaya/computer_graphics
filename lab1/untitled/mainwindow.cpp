@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QMenuBar>
 #include <QMessageBox>
@@ -66,7 +66,7 @@ void MainWindow::drawPoints() {
   if (points.size() != 0 || polygons.size() != 0)
     drawAxis(&p);
 
-  for (size_t i = 0; i < vec.size(); i++) {
+  for (size_t i = 0; i < polygons.size(); i++) {
     QPoint buf;
     QPolygon polygon = QPolygon();
     int res_x, res_y;
@@ -82,8 +82,9 @@ void MainWindow::drawPoints() {
     p.drawPolygon(polygon);
     lastevents.push_back(1);
   }
-
-  for (int i = 0; i < points.size(); i++) {
+  int j = points.size();
+  int count_points_size = std::max(0, j);
+  for (int i = 0; i < count_points_size; i++) {
     drawPoint(&p, QColor(0, 0, 255), points[i]);
     lastevents.push_back(0);
   }
@@ -93,8 +94,11 @@ void MainWindow::drawPoints() {
 
     int res_x, res_y;
     QPoint buf;
-    for (size_t i = 0; i < points.size(); i++) {
-      from_abs_coordinates(points[i].x(), points[i].y(), &res_x, &res_y);
+    int j = vec[cnt_polygons - 1].size();
+    int count_points_size = std::max(0, j);
+    for (int i = 0; i < count_points_size; i++) {
+      from_abs_coordinates(vec[cnt_polygons - 1][i].x(),
+                           vec[cnt_polygons - 1][i].y(), &res_x, &res_y);
       buf = QPoint(res_x, res_y - ui->menubar->height());
       polygon << buf;
     }
@@ -107,8 +111,7 @@ void MainWindow::drawPoints() {
     drawAxis(&p);
     is_draw_polygon = 0;
     polygons.push_back(polygon);
-    std::vector<QPoint> buf_v = points;
-    vec.push_back(buf_v);
+    cnt_polygons++;
   }
 
   if (is_find_polygon) {
@@ -149,18 +152,6 @@ void MainWindow::drawPoints() {
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
-  if (n == 0) {
-    ui->lineEdit->setText("Ошибка! Нет кол-ва точек.");
-    return;
-  }
-  if (n <= 2) {
-    ui->lineEdit->setText("Ошибка! Мало точек для многоугольника.");
-    return;
-  }
-  if (n == points.size()) {
-    ui->lineEdit->setText("Ошибка! Превышен максимальное кол-во точек.");
-    return;
-  }
   ui->lineEdit->setText("");
   int canv_x = event->pos().x() - ui->graphicsView->x();
   int canv_y = event->pos().y() - ui->graphicsView->y();
@@ -171,6 +162,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
   if (canv_x >= 0 && canv_y >= 0 && canv_x <= ui->graphicsView->width() &&
       canv_y <= ui->graphicsView->height() + ui->menubar->height()) {
     points.push_back(QPoint(abs_x, abs_y));
+    if (cnt_polygons > vec.size()) {
+      std::vector<QPoint> c;
+      vec.push_back(c);
+    }
+    vec[cnt_polygons - 1].push_back(QPoint(abs_x, abs_y));
     scan_to_table();
     drawPoints();
   }
@@ -188,8 +184,10 @@ void MainWindow::on_backbutton_clicked() {
   if (lastevents.size() != 0) {
     if (lastevents.back() == 0) {
       points.pop_back();
+      vec[cnt_polygons - 1].pop_back();
       ui->table->setItem(points.size(), 0, nullptr);
       ui->table->setItem(points.size(), 1, nullptr);
+      ui->table->setItem(points.size(), 2, nullptr);
       drawPoints();
     }
     if (lastevents.back() == 1) {
@@ -197,37 +195,28 @@ void MainWindow::on_backbutton_clicked() {
         polygons.pop_back();
       if (vec.size())
         vec.pop_back();
+      cnt_polygons--;
+      drawPoints();
+    }
+    if (lastevents.back() == 3) {
+      addPoint(del_points.back().x(), del_points.back().y(), false);
+      del_points.pop_back();
       drawPoints();
     }
     lastevents.pop_back();
   }
 }
 
-void MainWindow::on_spinBox_valueChanged(int arg1) {
-  ui->table->setRowCount(arg1);
-  cnt_polygons++; // КОЛИЧЕСТВО МНОГОУГОЛЬНИКОВ ТЕКУЩЕЕ
-  if (points.size()) {
-    ui->table->clear();
-    QTableWidgetItem *x = new QTableWidgetItem;
-    QTableWidgetItem *y = new QTableWidgetItem;
-    x->setText("x");
-    y->setText("y");
-    ui->table->setHorizontalHeaderItem(0, x);
-    ui->table->setHorizontalHeaderItem(1, y);
-    size_t cnt = points.size();
-    for (size_t i = 0; i < cnt; i++)
-      points.pop_back();
-  }
-  n = arg1;
-}
-
 int MainWindow::scan_from_table() {
+  //  QTableWidgetItem *table_n = new QTableWidgetItem;
+  //  table_n->setText(QString::number((double)cnt_polygons));
+  //  ui->table->setItem(0, 2, table_n);
   size_t cnt = points.size();
   for (size_t i = 0; i < cnt; i++)
     points.pop_back();
   double x, y;
   bool rc;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < cnt; i++) {
     QTableWidgetItem *x_item = ui->table->item(i, 0);
     QTableWidgetItem *y_item = ui->table->item(i, 1);
     if (x_item == nullptr && y_item == nullptr)
@@ -255,6 +244,11 @@ int MainWindow::scan_from_table() {
       return EXIT_FAILURE;
     }
     points.push_back(QPoint(int(x), int(y)));
+    if (cnt_polygons > vec.size()) {
+      std::vector<QPoint> c;
+      vec.push_back(c);
+    }
+    vec[cnt_polygons - 1].push_back(QPoint(int(x), int(y)));
     if (x > max_x)
       max_x = x;
     else if (x < min_x)
@@ -271,18 +265,28 @@ int MainWindow::scan_from_table() {
 
 void MainWindow::scan_to_table() {
   bool oldState = ui->table->blockSignals(true);
-  size_t i;
-  for (i = 0; i < points.size(); i++) {
+  int j = points.size();
+  int count = 0;
+  int k = vec[count].size();
+  int b = 0;
+  int count_points_size = std::max(0, j);
+  for (int i = 0; i < count_points_size; i++) {
     QTableWidgetItem *x = new QTableWidgetItem;
     QTableWidgetItem *y = new QTableWidgetItem;
+    QTableWidgetItem *num = new QTableWidgetItem;
+    ui->table->setRowCount(j);
     x->setText(QString::number((double)points[i].x()));
     y->setText(QString::number((double)(points[i].y())));
+    num->setText(QString::number((int)(count + 1)));
+    b++;
+    if (k == b) {
+      b = 0;
+      count++;
+      k = vec[count].size();
+    }
     ui->table->setItem(i, 0, x);
     ui->table->setItem(i, 1, y);
-  }
-  for (; i < n; i++) {
-    ui->table->setItem(i, 0, nullptr);
-    ui->table->setItem(i, 1, nullptr);
+    ui->table->setItem(i, 2, num);
   }
   ui->table->blockSignals(oldState);
 }
@@ -316,15 +320,18 @@ void MainWindow::on_table_cellClicked(int row, int column) {
   y = y_str.toDouble(&rc);
   if (!rc)
     return;
+
   int real_x, real_y;
   from_abs_coordinates(x, y, &real_x, &real_y);
   ui->graphicsView->scene()->addEllipse(
       real_x, real_y - ui->menubar->height(), R_POINT + 2, R_POINT + 2,
       QPen(Qt::yellow, 1, Qt::SolidLine), QBrush(Qt::yellow));
-  if (cnt_polygons == polygons.size() && vec.size() != 0) {
-    polygons.pop_back();
-    vec.pop_back();
-  }
+
+  highlighted = row;
+  //  if (cnt_polygons == polygons.size() && vec.size() != 0) {
+  //    polygons.pop_back();
+  //    vec.pop_back();
+  //  }
 }
 
 void MainWindow::to_abs_coordinates(int x, int y, int *res_x, int *res_y) {
@@ -382,37 +389,48 @@ void MainWindow::drawAxis(QPainter *p) {
 }
 
 void MainWindow::on_cleanbutton_clicked() {
-  lastevents.push_back(0);
+  int k = lastevents.size();
+  for (int i = 0; i < k; i++)
+    lastevents.pop_back();
+  // lastevents.push_back(0);
+  ui->lineEdit->setText("");
   ui->table->clear();
   QTableWidgetItem *x = new QTableWidgetItem;
   QTableWidgetItem *y = new QTableWidgetItem;
+  QTableWidgetItem *num = new QTableWidgetItem;
   x->setText("x");
   y->setText("y");
+  num->setText("№ N-уг-ка");
   ui->table->setHorizontalHeaderItem(0, x);
   ui->table->setHorizontalHeaderItem(1, y);
+  ui->table->setHorizontalHeaderItem(2, num);
   int cnt_points = points.size();
   for (int i = 0; i < cnt_points; i++)
     points.pop_back();
   cnt_points = polygons.size();
   for (int i = 0; i < cnt_points; i++) {
     polygons.pop_back();
+    int k = vec[i].size();
+    for (int j = 0; j < k; j++)
+      vec[i].pop_back();
     vec.pop_back();
   }
-  ui->spinBox->setValue(0);
   min_x = 0;
   min_y = 0;
   max_x = 100;
   max_y = 100;
+  cnt_polygons = 1;
   drawPoints();
 }
 
 void MainWindow::on_drawbutton_clicked() {
-  if (points.size() != n) {
+  if (vec[cnt_polygons - 1].size() <= 2) {
     ui->lineEdit->setText("Ошибка! Недостаточно точек для данного N-уголника.");
     return;
   }
   is_draw_polygon = 1;
   drawPoints();
+  // cnt_polygons++;
 }
 
 int is_similarity_matr(std::vector<std::vector<double>> a,
@@ -475,14 +493,16 @@ int is_similarity(std::vector<std::vector<double>> a,
                   std::vector<std::vector<double>> b) {
   std::vector<std::vector<double>> m1 = a; //???
   std::vector<std::vector<double>> m2 = b;
-  if (m1.size() == m2.size() && is_similarity_matr(m1, m2))
+  if (m1.size() != m2.size())
+    return 0;
+  if (is_similarity_matr(m1, m2))
     return 1;
   int cnt_el = m1.size();
   int *arr = new int[cnt_el];
   for (int i = 0; i < cnt_el; i++)
     arr[i] = i;
   while (NextSet(arr, cnt_el, m2))
-    if (m1.size() == m2.size() && is_similarity_matr(m1, m2))
+    if (is_similarity_matr(m1, m2))
       return 1;
 
   return 0;
@@ -508,18 +528,25 @@ void MainWindow::on_findbutton_clicked() {
         double distance = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
         d.push_back(distance);
       }
-      std::vector<double> d_copy = d;
+      std::vector<double> d_copy;
+      for (size_t j = 0; j < d.size(); j++) {
+        d_copy.push_back(d[j]);
+      }
       matr.push_back(d_copy);
       d.clear();
     }
-    std::vector<std::vector<double>> matr_copy = matr;
+    std::vector<std::vector<double>> matr_copy;
+    for (size_t j = 0; j < matr.size(); j++) {
+      matr_copy.push_back(matr[i]);
+    }
     matrixes.push_back(matr_copy);
     matr.clear();
   }
   int cnt_n = 0;
   for (size_t i = 0; i + 1 < matrixes.size(); i++) {
     for (size_t j = i + 1; j < matrixes.size(); j++) {
-      if (is_similarity(matrixes[i], matrixes[j]) &&
+      if (matrixes[i].size() == matrixes[j].size() &&
+          is_similarity(matrixes[i], matrixes[j]) &&
           matrixes[i].size() > cnt_n) {
         cnt_n = matrixes[i].size();
         ind1 = i;
@@ -535,3 +562,81 @@ void MainWindow::on_findbutton_clicked() {
         "Подобные многоугольники выделены красной жирной линией.");
   drawPoints();
 }
+
+void MainWindow::addPoint(int x, int y, bool is_blocked) {
+  bool oldState;
+  if (is_blocked)
+    oldState = ui->table->blockSignals(true);
+  int row = points.size();
+  highlighted = -1;
+  ui->table->insertRow(row);
+  ui->table->setItem(row, 0, new QTableWidgetItem(QString::number(x)));
+  ui->table->setItem(row, 1, new QTableWidgetItem(QString::number(y)));
+
+  QTableWidgetItem *num = new QTableWidgetItem;
+  num->setText(QString::number((int)(cnt_polygons)));
+
+  ui->table->setItem(row, 2, num);
+  if (x > max_x)
+    max_x = x;
+  else if (x < min_x)
+    min_x = x;
+
+  if (y > max_y)
+    max_y = y;
+  else if (y < min_y)
+    min_y = y;
+  points.push_back(QPoint(x, y));
+  if (cnt_polygons > vec.size()) {
+    std::vector<QPoint> c;
+    vec.push_back(c);
+  }
+  vec[cnt_polygons - 1].push_back(QPoint(x, y));
+  drawPoints();
+  lastevents.push_back(0);
+  if (is_blocked)
+    ui->table->blockSignals(oldState);
+}
+
+void MainWindow::on_addButton_clicked() {
+  drawPoints();
+  QString x_str = ui->lineX->text();
+  QString y_str = ui->lineY->text();
+
+  bool x_flag, y_flag;
+  int x = x_str.toInt(&x_flag);
+  int y = y_str.toInt(&y_flag);
+  if (!x_flag || !y_flag) {
+    ui->lineEdit->setText("Ошибка! Введено некорректное число!");
+    ui->lineX->clear();
+    ui->lineY->clear();
+    return;
+  }
+
+  addPoint(x, y, true);
+  ui->lineY->clear();
+  ui->lineX->clear();
+}
+
+void MainWindow::on_deletebutton_clicked() {
+  if (points.empty()) {
+    ui->lineEdit->setText("Ошибка! Нет точек для удаления!");
+    return;
+  }
+  drawPoints();
+  if (highlighted == -1) {
+    ui->lineEdit->setText("Ошибка! Не выделена точка!");
+    return;
+  }
+  del_points.push_back(points[highlighted]);
+  points.erase(points.begin() + highlighted);
+
+  ui->table->removeRow(highlighted);
+  ui->table->clearSelection();
+  highlighted = -1;
+
+  drawPoints();
+  lastevents.push_back(3);
+}
+
+void MainWindow::on_table_itemChanged(QTableWidgetItem *item) {}

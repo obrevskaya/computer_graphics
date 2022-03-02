@@ -24,25 +24,61 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label">
         <property name="maximumSize">
          <size>
-          <width>234</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
         </property>
         <property name="text">
-         <string>Введите кол-во сторон N-угольника</string>
+         <string>Введите X:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="spinBox">
+       <widget class="QLineEdit" name="lineX">
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Введите Y:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineY">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="addButton">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Добавить точку</string>
         </property>
        </widget>
       </item>
@@ -50,7 +86,7 @@
        <widget class="QTableWidget" name="table">
         <property name="maximumSize">
          <size>
-          <width>234</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
         </property>
@@ -67,13 +103,18 @@
           <string>y</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string> № N-уг-ка</string>
+         </property>
+        </column>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="drawbutton">
         <property name="maximumSize">
          <size>
-          <width>234</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
         </property>
@@ -83,7 +124,26 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="deletebutton">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Удалить точку</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="backbutton">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Назад</string>
         </property>
@@ -91,6 +151,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="cleanbutton">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Очистить всё</string>
         </property>
@@ -98,6 +164,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="findbutton">
+        <property name="maximumSize">
+         <size>
+          <width>350</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Найти подобные N-угольники с макс N</string>
         </property>
@@ -121,7 +193,7 @@
        <widget class="QLineEdit" name="lineEdit">
         <property name="minimumSize">
          <size>
-          <width>598</width>
+          <width>520</width>
           <height>48</height>
          </size>
         </property>
