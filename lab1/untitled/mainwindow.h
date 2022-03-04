@@ -68,13 +68,10 @@ private slots:
 
   void on_deletebutton_clicked();
 
-  void on_table_itemChanged(QTableWidgetItem *item);
-
 private:
   Ui::MainWindow *ui;
   std::vector<QPoint> points;
   std::vector<QPoint> del_points;
-  std::vector<QPolygon> polygons;
   std::vector<int> lastevents;
   std::vector<std::vector<QPoint>> vec;
   std::vector<std::vector<std::vector<double>>> matrixes;
@@ -87,5 +84,6 @@ private:
   int ind1 = 0, ind2 = 0;
   size_t cnt_polygons = 1;
   int highlighted = -1;
+  int highlight_num_vec = -1;
 };
 #endif // MAINWINDOW_H
