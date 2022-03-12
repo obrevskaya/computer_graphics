@@ -28,6 +28,7 @@ public:
   ~MainWindow();
   void mousePressEvent(QMouseEvent *event);
   void resizeEvent(QResizeEvent *event);
+  void showEvent(QShowEvent *ev);
 
 private slots:
 
@@ -70,11 +71,12 @@ private slots:
 
 private:
   Ui::MainWindow *ui;
-  std::vector<QPoint> points;
   std::vector<QPoint> del_points;
   std::vector<int> lastevents;
-  std::vector<std::vector<QPoint>> vec;
+  std::vector<std::vector<QPoint>> polygons;
+  std::vector<std::vector<QPoint>> dup_polygons;
   std::vector<std::vector<std::vector<double>>> matrixes;
+
   int size_x = 100;
   int size_y = 100;
   int min_x, max_x;
@@ -82,7 +84,6 @@ private:
   int is_draw_polygon = 0;
   int is_find_polygon = 0;
   int ind1 = 0, ind2 = 0;
-  size_t cnt_polygons = 1;
   int highlighted = -1;
   int highlight_num_vec = -1;
 };
