@@ -209,12 +209,12 @@ void MainWindow::on_backbutton_clicked() {
   }
   if (lastevents.size() != 0) {
     if (lastevents.back() == DRAW_POINT_EVEN) {
-      polygons[polygons.size() - 1].pop_back();
-
+      if (polygons.size())
+        polygons[polygons.size() - 1].pop_back();
       size_t cnt_all_points = count_all_points(polygons);
-      ui->table->setItem(cnt_all_points, 0, nullptr);
-      ui->table->setItem(cnt_all_points, 1, nullptr);
-      ui->table->setItem(cnt_all_points, 2, nullptr);
+      // ui->table->setItem(cnt_all_points, 0, nullptr);
+      // ui->table->setItem(cnt_all_points, 1, nullptr);
+      // ui->table->setItem(cnt_all_points, 2, nullptr);
       ui->table->removeRow(cnt_all_points);
       ui->table->clearSelection();
       drawPoints();
