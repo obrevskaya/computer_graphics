@@ -38,8 +38,8 @@ private:
   void standartDrawCircle(QPainter *p, const Circle &circle, bool draw = true);
   void drawPoint(QPainter *p, const QPointF &point, const QColor &color,
                  bool draw = true);
-  void draw4SymPoints(QPainter *p, const QPointF &center, double x, double y,
-                      const QColor &color, bool draw = true);
+  void drawSym(QPainter *p, const QPointF &center, double x, double y,
+               const QColor &color, bool draw = true);
   void canonicalDrawCircle(QPainter *p, const Circle &circle, bool draw);
   void parametricDrawCircle(QPainter *p, const Circle &circle, bool draw);
   void bresenhamDrawCircle(QPainter *p, const Circle &circle, bool draw);

@@ -22,7 +22,7 @@ with open("../lab4/time_r_res_el.txt", "r") as f:
         timesMiddleDot.append(float(f.readline().replace(",", ".")))
 
         
-plt.suptitle(f"Эллипсы\nПолуось а: {a}        Полуось b: {b}\nШаг: {da}         Кол-во: {n}")
+plt.suptitle(f"Эллипсы\nПолуось а: {a}        Полуось b: {b}\nШаг А: {da}   Шаг В: {db}      Кол-во: {n}")
 radiuses = []      
 for i in range(n):
     radiuses.append(a + da * i)

@@ -112,8 +112,8 @@ void View::drawCircle(QPainter *p, const Circle &circle, bool draw) {
     midPointDrawCircle(p, realCircle, draw);
 }
 
-void View::draw4SymPoints(QPainter *p, const QPointF &center, double x,
-                          double y, const QColor &color, bool draw) {
+void View::drawSym(QPainter *p, const QPointF &center, double x, double y,
+                   const QColor &color, bool draw) {
   double c_y = center.y();
   double c_x = center.x();
 
@@ -158,8 +158,8 @@ void View::canonicalDrawCircle(QPainter *p, const Circle &circle, bool draw) {
   const int deltaX = qRound(r / sqrt(2));
   for (int x = 0; x <= deltaX; ++x) {
     const int y = qRound(sqrt(r2 - x * x));
-    draw4SymPoints(p, circle.center, x, y, circle.color, draw);
-    draw4SymPoints(p, circle.center, y, x, circle.color, draw);
+    drawSym(p, circle.center, x, y, circle.color, draw);
+    drawSym(p, circle.center, y, x, circle.color, draw);
   }
 }
 
@@ -169,8 +169,8 @@ void View::parametricDrawCircle(QPainter *p, const Circle &circle, bool draw) {
   for (float t = M_PI / 4.0f; t >= -dt / 2.0f; t -= dt) {
     const int x = qRound(r * cos(t));
     const int y = qRound(r * sin(t));
-    draw4SymPoints(p, circle.center, x, y, circle.color, draw);
-    draw4SymPoints(p, circle.center, y, x, circle.color, draw);
+    drawSym(p, circle.center, x, y, circle.color, draw);
+    drawSym(p, circle.center, y, x, circle.color, draw);
   }
 }
 
@@ -179,12 +179,9 @@ void View::bresenhamDrawCircle(QPainter *p, const Circle &circle, bool draw) {
   int x = 0;
   int y = r;
 
-  // разность квадратов расстояний от центра окружности до диагонального пиксела
-  // и до идеальной окружности: d = (x + 1)^2 + (y - 1)^2 - r^2 = 1 + (r - 1)^2
-  // - r^2 = 2(1 - r)
   int d = 2 * (1 - r);
   while (y >= 0) {
-    draw4SymPoints(p, circle.center, x, y, circle.color, draw);
+    drawSym(p, circle.center, x, y, circle.color, draw);
 
     if (d < 0) { // пиксел внутри окружности
       const int d1 = 2 * (d + y) - 1;
@@ -218,8 +215,8 @@ void View::midPointDrawCircle(QPainter *p, const Circle &circle, bool draw) {
   int y = r;
   int d = 1 - r;
   do {
-    draw4SymPoints(p, circle.center, x, y, circle.color, draw);
-    draw4SymPoints(p, circle.center, y, x, circle.color, draw);
+    drawSym(p, circle.center, x, y, circle.color, draw);
+    drawSym(p, circle.center, y, x, circle.color, draw);
 
     ++x;
     if (d < 0) // средняя точка внутри окружности, ближе верхний пиксел,
@@ -275,14 +272,14 @@ void View::canonicalDrawEllipse(QPainter *p, const Ellipse &ellipse,
   const int deltaX = qRound(a2 / sqrt(a2 + b2));
   for (int x = 0; x <= deltaX; ++x) {
     const int y = qRound(sqrt(static_cast<float>(a2 - x * x)) * bDivA);
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
   }
 
   const float aDivB = static_cast<float>(a) / b;
   const int deltaY = qRound(b2 / sqrt(a2 + b2));
   for (int y = 0; y <= deltaY; ++y) {
     const int x = qRound(sqrt(static_cast<float>(b2 - y * y)) * aDivB);
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
   }
 }
 
@@ -294,7 +291,7 @@ void View::parametricDrawEllipse(QPainter *p, const Ellipse &ellipse,
   for (float t = M_PI / 2.0f; t >= -dt / 2.0f; t -= dt) {
     const int x = qRound(a * cos(t));
     const int y = qRound(b * sin(t));
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
   }
 }
 
@@ -312,7 +309,7 @@ void View::bresenhamDrawEllipse(QPainter *p, const Ellipse &ellipse,
   // пиксела и до идеального эллипса
   int d = a2 + b2 - 2 * a2 * y;
   while (y >= 0) {
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
     if (d < 0) { // пиксел лежит внутри эллипса
       const int d1 = 2 * (d + a2 * y) - a2; // lг - lд
       ++x;
@@ -352,7 +349,7 @@ void View::midPointDrawEllipse(QPainter *p, const Ellipse &ellipse, bool draw) {
   int f = b2 + a2 * (y - 0.5f) * (y - 0.5) - static_cast<long long>(a2) * b2;
   const int deltaX = a2 / sqrt(b2 + a2);
   while (x <= deltaX) {
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
 
     ++x;
     if (f > 0) {
@@ -364,7 +361,7 @@ void View::midPointDrawEllipse(QPainter *p, const Ellipse &ellipse, bool draw) {
 
   f += 0.75f * (a2 - b2) - (b2 * x + a2 * y);
   while (y >= 0) {
-    draw4SymPoints(p, ellipse.center, x, y, ellipse.color, draw);
+    drawSym(p, ellipse.center, x, y, ellipse.color, draw);
 
     --y;
     if (f < 0) {
