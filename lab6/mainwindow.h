@@ -61,6 +61,12 @@ private slots:
   void on_pointsTable_currentCellChanged(int currentRow, int currentColumn,
                                          int previousRow, int previousColumn);
 
+  void on_seedButton_clicked();
+
+  void on_seedX_textChanged(const QString &arg1);
+
+  void on_seedY_textChanged(const QString &arg1);
+
 protected:
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event);
@@ -75,5 +81,7 @@ private:
   std::stack<state_t> states;
   std::vector<std::vector<QString>> prev_table;
   std::vector<std::string> prev;
+  bool is_seed_inputing;
+  point_t seed;
 };
 #endif // MAINWINDOW_H

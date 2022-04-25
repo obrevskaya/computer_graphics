@@ -37,11 +37,19 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->exit, SIGNAL(triggered()), this, SLOT(exit_messagebox()));
 
   ui->undoButton->setEnabled(false);
+
   ui->Delay->setEnabled(false);
   ui->Delaylabel->setText("");
+  ui->seedButton->setStyleSheet(
+      "QPushButton{ background-color: rgb(32,181,245); color:rgb(240,247,250) "
+      "}\n");
   for (int i = 0; i < 10; i++)
     ui->pointsTable->insertRow(ui->pointsTable->rowCount());
   prev = table_create(ui->pointsTable);
+
+  is_seed_inputing = false;
+  seed.x = 0;
+  seed.y = 0;
 }
 
 MainWindow::~MainWindow() {
@@ -63,7 +71,8 @@ void MainWindow::error_messagebox(QString text) {
 
 void MainWindow::progInfo_messagebox() {
   QMessageBox::about(this, "ПРОГРАММА",
-                     "Реализует алгоритм заполнения со списком ребер и флагом");
+                     "Реализует алгоритм построчного затравочного заполнения "
+                     "сплошных областей");
 }
 
 void MainWindow::authorInfo_messagebox() {
@@ -93,10 +102,23 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
   QPointF p = ui->graphicsView->mapToScene(event->pos());
   p.setX(p.x() - ui->graphicsView->geometry().x());
   p.setY(p.y() - ui->graphicsView->geometry().y() - 20);
+  std::vector<double> time;
   if (p.x() < 0 || p.x() > ui->graphicsView->width() || p.y() < 0 ||
       p.y() > ui->graphicsView->height())
     return;
-  std::vector<double> time;
+  if (is_seed_inputing) {
+
+    auto params = params_t{.command = CLOSE_POLYGON, .time = time};
+    request(*drawer, params).handle();
+
+    ui->seedX->setValue(p.x());
+    ui->seedY->setValue(p.y());
+    seed.x = p.x();
+    seed.y = p.y();
+    is_seed_inputing = false;
+    return;
+  }
+
   ui->undoButton->setEnabled(true);
   states_push(
       states,
@@ -198,7 +220,7 @@ void MainWindow::on_closePolygonButton_clicked() {
 }
 
 void MainWindow::on_fillButton_clicked() {
-  std::vector<double> time;
+  std::vector<double> time; // TODO
   polygones_t polygones =
       request(*drawer, params_t{.command = -1, .time = time}).handle();
   if (!polygones_is_all_closed(polygones)) {
@@ -214,9 +236,19 @@ void MainWindow::on_fillButton_clicked() {
   qcolor.getRgb(&color.r, &color.g, &color.b);
   sleep_data_t sleep_data = {.is_sleep = ui->modeSelect->currentIndex() == 1,
                              .sleep_time = ui->Delay->value()};
-  auto params = params_t{
-      .command = FILL, .color = color, .time = time, .sleep_data = sleep_data};
+  auto params = params_t{.command = FILL,
+                         .color = color,
+                         .time = time,
+                         .point = seed,
+                         .sleep_data = sleep_data};
   request(*drawer, params).handle();
+
+  polygones = request(*drawer, params_t{.command = -1, .time = time}).handle();
+  if (!polygones[polygones.size() - 2].filled) {
+    QMessageBox::critical(this, "Ошибка",
+                          "Растравая точка вне многоугольника!");
+  }
+
   std::string str;
   str.append("Время заливки многоугольников (в мкс.): ");
   const double eps = 1e-8;
@@ -347,6 +379,10 @@ void MainWindow::on_pointsTable_currentCellChanged(int currentRow,
     return;
   }
   if (x_item == nullptr || y_item == nullptr) {
+    error_messagebox(
+        QString("Ошибка при вводе точки: поле x или y %1 точки пустое!")
+            .arg(QString::number(previousRow + 1)));
+    states_pop(states);
     return;
   }
   QString x_str = x_item->text();
@@ -355,7 +391,7 @@ void MainWindow::on_pointsTable_currentCellChanged(int currentRow,
     states_pop(states);
     return;
   }
-  if (x_str.isEmpty()) {
+  if (x_str.isEmpty() || y_str.isEmpty()) {
     error_messagebox(
         QString("Ошибка при вводе точки: поле x или y %1 точки пустое!")
             .arg(QString::number(previousRow + 1)));
@@ -407,4 +443,29 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
   if (event->key() == Qt::Key_Space) {
     on_addHoleButton_clicked();
   }
+}
+
+void MainWindow::on_seedButton_clicked() { is_seed_inputing = true; }
+
+void MainWindow::on_seedX_textChanged(const QString &arg1) {
+  std::vector<double> time;
+  polygones_t polygones =
+      request(*drawer, params_t{.command = -1, .time = time}).handle();
+  drawer->redraw(polygones);
+  drawer->draw_point(ui->seedX->value(), ui->seedY->value(),
+                     color_t{255, 223, 0});
+  seed.x = ui->seedX->value();
+  seed.y = ui->seedY->value();
+}
+
+void MainWindow::on_seedY_textChanged(const QString &arg1) {
+  std::vector<double> time;
+
+  polygones_t polygones =
+      request(*drawer, params_t{.command = -1, .time = time}).handle();
+  drawer->redraw(polygones);
+  drawer->draw_point(ui->seedX->value(), ui->seedY->value(),
+                     color_t{255, 223, 0});
+  seed.x = ui->seedX->value();
+  seed.y = ui->seedY->value();
 }
